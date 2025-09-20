@@ -31,8 +31,554 @@ small{color:#9fb0c2}
 </style>
 </head>
 <body>
-  <!-- For brevity here, I'm including the exact same HTML+JS you provided in your last iteration. -->
-  <!-- Paste your full working <div class="app"> ... </html> code here verbatim. -->
-  REPLACE_THIS_WITH_THE_FULL_INDEX_HTML_FROM_YOUR_MESSAGE
+<div class="app">
+    <aside class="panel">
+      <h1>Glitch Lab v3 — Max FX</h1>
+      <div class="sub">All the toys. Live video + export with baked FX.</div>
+
+      <div class="section">
+        <div class="grid">
+          <div class="row"><label>Open file</label><input id="file" type="file" accept="video/*" class="btn"></div>
+          <div class="row"><label>Play / Pause</label><button id="playPause" class="btn" disabled>Play</button></div>
+          <div class="row"><label>Playback rate</label><input id="rate" type="range" min="0.1" max="2.0" step="0.05" value="1"></div>
+          <div class="row"><label>Low‑CPU scale</label><input id="scale" type="range" min="0.25" max="1.0" step="0.05" value="0.75"></div>
+          <div class="row"><label>Snapshot</label><button id="snapshot" class="btn" disabled>Save PNG</button></div>
+        </div>
+        <small>Space: Play/Pause • R: Randomize FX • Drag a file onto the canvas</small>
+      </div>
+
+      <div class="section">
+        <h2>Transport</h2>
+        <div class="timebar">
+          <div id="tCur" class="time">0:00</div>
+          <input id="scrub" type="range" min="0" max="0" step="0.01" value="0">
+          <div id="tDur" class="time">0:00</div>
+        </div>
+        <div class="grid">
+          <div class="row"><label>Trim start (s)</label><input id="trimStart" class="text" type="number" min="0" step="0.01" value="0"></div>
+          <div class="row"><label>Trim end (s)</label><input id="trimEnd" class="text" type="number" min="0" step="0.01" value="0"></div>
+          <div class="row"><label>Loop trimmed range</label><input id="loopTrim" type="checkbox"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Presets</h2>
+        <label class="sub">Built-in</label>
+        <select id="presets" class="select"></select>
+        <label class="sub" style="margin-top:8px;display:block">User presets</label>
+        <select id="userPresets" class="select"></select>
+        <div class="grid" style="margin-top:8px">
+          <div class="row"><label>Preset name</label><input id="presetName" class="text" type="text" maxlength="40" placeholder="e.g., Neon Tunnel"></div>
+          <div class="row"><label>Actions</label><div>
+            <button id="savePreset" class="btn">Save preset</button>
+            <button id="deletePreset" class="btn">Delete selected</button>
+          </div></div>
+        </div>
+        <button id="randomize" class="btn" style="margin-top:8px">🎲 Randomize</button>
+        <small class="hint">Up to 15 user presets are saved in this browser.</small>
+      </div>
+
+      <div class="section">
+        <h2>Feedback & Temporal</h2>
+        <div class="grid">
+          <div class="row"><label>Enable feedback</label><input id="useFeedback" type="checkbox" checked></div>
+          <div class="row"><label title="Where the echo gets blended: pre = before all effects, post = after all effects">Feedback placement</label>
+            <select id="fbPosition" class="select">
+              <option value="0">Start of chain (pre)</option>
+              <option value="1">End of chain (post)</option>
+           </select>
+          </div>
+          <div class="row"><label>Feedback mode</label>
+            <select id="feedbackMode" class="select">
+              <option value="0">Melt (psychedelic)</option>
+              <option value="1">Crisp Echo</option>
+              <option value="2">Additive</option>
+              <option value="3">Screen</option>
+              <option value="4">Difference</option>
+              <option value="5">Darken</option>
+              <option value="6">Lighten</option>
+              <option value="7">Optical Bloom</option>
+            </select>
+          </div>
+          <div class="row"><label title="How strongly the echo (previous frame) blends into the current frame">Feedback strength</label><input id="feedbackMix" type="range" min="0" max="0.98" step="0.01" value="0.6"></div>
+          <div class="row"><label title="Tiny zoom per frame for tunnel drift">Zoom drift</label><input id="feedbackZoom" type="range" min="0.95" max="1.05" step="0.0005" value="1.0025"></div>
+          <div class="row"><label title="Brightness applied to the echo before mixing">Echo brightness</label><input id="fbGain" type="range" min="0" max="3" step="0.01" value="1.0"></div>
+          <div class="row"><label title="Adjust echo midtones (gamma) before mixing">Echo curve (gamma)</label><input id="fbGamma" type="range" min="0.1" max="3" step="0.01" value="1.0"></div>
+          <div class="row"><label title="Color intensity of the echo">Echo color</label><input id="fbSat" type="range" min="0" max="2" step="0.01" value="1.0"></div>
+          <div class="row"><label title="Rotate echo colors around the hue wheel">Echo hue</label><input id="fbHue" type="range" min="-3.1416" max="3.1416" step="0.01" value="0"></div>
+          <div class="row"><label title="Soften echo to get glow/bloomier trails">Echo blur</label><input id="fbBlur" type="range" min="0" max="1" step="0.01" value="0"></div>
+          <div class="row"><label title="Blend only brightness from the echo, not the color">Luma-only blend</label><input id="fbLuma" type="range" min="0" max="1" step="0.01" value="0"></div>
+          <div class="row"><label title="Prevent blown-out highlights in feedback">Anti-blowout (tone map)</label><input id="fbTone" type="range" min="0" max="1" step="0.01" value="0.2"></div>
+          <div class="row"><label title="Cap the echo highlights to keep detail">Highlight clamp</label><input id="fbClamp" type="range" min="0" max="1" step="0.01" value="0.0"></div>
+          <div class="row"><label>Warp amp</label><input id="warpAmp" type="range" min="0" max="0.05" step="0.0005" value="0.01"></div>
+          <div class="row"><label>Warp freq</label><input id="warpFreq" type="range" min="0" max="80" step="0.5" value="24"></div>
+          <div class="row"><label>Warp speed</label><input id="warpSpeed" type="range" min="-3" max="3" step="0.05" value="1.2"></div>
+          <div class="row"><label title="Number of mirrored slices">Kaleidoscope sides</label><input id="kaleido" type="range" min="1" max="12" step="1" value="1"></div>
+          <div class="row"><label title="Blend in multiple past frames for time trails">Time echo strength</label><input id="echoMix" type="range" min="0" max="1" step="0.01" value="0.35"></div>
+          <div class="row"><label title="How quickly older echoes fade">Time echo decay</label><input id="echoDecay" type="range" min="0" max="1" step="0.01" value="0.7"></div>
+          <div class="row"><label title="Slice the image over time to create scan-line trails">Slit-scan mix</label><input id="slitMix" type="range" min="0" max="1" step="0.01" value="0.0"></div>
+          <div class="row"><label title="Scan direction: 0 = horizontal, 1 = vertical">Slit direction (0=x,1=y)</label><input id="slitDir" type="range" min="0" max="1" step="1" value="1"></div>
+          <div class="row"><label title="How fast the slit-scan advances">Slit speed</label><input id="slitRate" type="range" min="0" max="3" step="0.01" value="1.0"></div>
+          <div class="row"><label title="Chance to hold frames for a stuttery look">Stutter chance</label><input id="stutter" type="range" min="0" max="1" step="0.01" value="0.0"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Image Glitch</h2>
+        <div class="grid">
+          <div class="row"><label title="Offset red/blue channels for chromatic split">Color channel offset</label><input id="rgbSplit" type="range" min="0" max="12" step="0.1" value="1.5"></div>
+          <div class="row"><label title="Size of the pixels (bigger = chunkier)">Pixel size</label><input id="pixelate" type="range" min="1" max="120" step="1" value="2"></div>
+          <div class="row"><label title="Reduce number of colors">Color steps (posterize)</label><input id="posterize" type="range" min="2" max="32" step="1" value="12"></div>
+          <div class="row"><label title="Reduce brightness levels">Brightness steps</label><input id="posterizeY" type="range" min="2" max="64" step="1" value="16"></div>
+          <div class="row"><label title="Reduce color resolution for crunchy bands">Bit crush</label><input id="bitDepth" type="range" min="2" max="8" step="1" value="8"></div>
+          <div class="row"><label title="Add film-style grain">Noise</label><input id="noiseAmt" type="range" min="0" max="1" step="0.01" value="0.08"></div>
+          <div class="row"><label>Block jitter</label><input id="blockJitter" type="range" min="0" max="60" step="1" value="6"></div>
+          <div class="row"><label>Scanlines</label><input id="scanlines" type="range" min="0" max="1" step="0.01" value="0.2"></div>
+          <div class="row"><label title="Automatically rotate colors over time">Auto hue cycle</label><input id="hueRate" type="range" min="-2" max="2" step="0.01" value="0.0"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Lens & Motion</h2>
+        <div class="grid">
+          <div class="row"><label title="Bend the image like a wide/telephoto lens">Lens bend (barrel/pincushion)</label><input id="barrel" type="range" min="-0.5" max="0.5" step="0.001" value="0"></div>
+          <div class="row"><label>Swirl</label><input id="swirl" type="range" min="0" max="6" step="0.01" value="0"></div>
+          <div class="row"><label>Shear X</label><input id="shearX" type="range" min="-0.5" max="0.5" step="0.001" value="0"></div>
+          <div class="row"><label>Shear Y</label><input id="shearY" type="range" min="-0.5" max="0.5" step="0.001" value="0"></div>
+          <div class="row"><label>Wave X amp</label><input id="waveXAmp" type="range" min="0" max="0.05" step="0.0005" value="0"></div>
+          <div class="row"><label>Wave X freq</label><input id="waveXFreq" type="range" min="0" max="80" step="0.5" value="20"></div>
+          <div class="row"><label>Wave Y amp</label><input id="waveYAmp" type="range" min="0" max="0.05" step="0.0005" value="0.01"></div>
+          <div class="row"><label>Wave Y freq</label><input id="waveYFreq" type="range" min="0" max="80" step="0.5" value="24"></div>
+          <div class="row"><label title="Skew like a fast phone camera pan">Rolling shutter skew</label><input id="rollSkew" type="range" min="-0.01" max="0.01" step="0.0001" value="0"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Analog & CRT</h2>
+        <div class="grid">
+          <div class="row"><label title="Strength of horizontal tearing bands">VHS tear strength</label><input id="tearAmt" type="range" min="0" max="40" step="1" value="0"></div>
+          <div class="row"><label title="How many horizontal tear bands appear">Tear band count</label><input id="tearBands" type="range" min="0" max="20" step="1" value="0"></div>
+          <div class="row"><label>Dust specks</label><input id="specks" type="range" min="0" max="1" step="0.01" value="0"></div>
+          <div class="row"><label>CRT curvature</label><input id="crtCurv" type="range" min="-0.4" max="0.4" step="0.001" value="0"></div>
+          <div class="row"><label>Vignette</label><input id="vignette" type="range" min="0" max="1" step="0.01" value="0.2"></div>
+          <div class="row"><label>Phosphor mask</label><input id="phosphor" type="range" min="0" max="1" step="0.01" value="0"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Color & Glow</h2>
+        <div class="grid">
+          <div class="row"><label>Hue shift</label><input id="hue" type="range" min="-3.1416" max="3.1416" step="0.01" value="0"></div>
+          <div class="row"><label>Saturation</label><input id="sat" type="range" min="0" max="3" step="0.01" value="1.2"></div>
+          <div class="row"><label>Brightness</label><input id="bright" type="range" min="-1" max="1" step="0.01" value="0"></div>
+          <div class="row"><label>Contrast</label><input id="contrast" type="range" min="0" max="3" step="0.01" value="1"></div>
+          <div class="row"><label title="Outline edges like a comic inking">Edge outline mix</label><input id="edgeMix" type="range" min="0" max="1" step="0.01" value="0"></div>
+          <div class="row"><label>Sharpen</label><input id="sharpen" type="range" min="0" max="2" step="0.01" value="0"></div>
+          <div class="row"><label title="How bright before glow kicks in">Bloom threshold (bright cutoff)</label><input id="bloomThresh" type="range" min="0" max="2" step="0.01" value="1.1"></div>
+          <div class="row"><label>Bloom strength</label><input id="bloomStr" type="range" min="0" max="2" step="0.01" value="0"></div>
+          <div class="row"><label title="Blend to pure black/white based on brightness">Black/white threshold mix</label><input id="threshMix" type="range" min="0" max="1" step="0.01" value="0"></div>
+          <div class="row"><label title="Add pixel dithering pattern to reduce banding">Dither amount</label><input id="dither" type="range" min="0" max="1" step="0.01" value="0"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Utilities & Export</h2>
+        <div class="grid">
+          <div class="row"><label>Seed</label><input id="seed" type="range" min="0" max="1000" step="1" value="1337"></div>
+          <div class="row"><label>Time freeze</label><input id="timeFreeze" type="checkbox"></div>
+          <div class="row"><label>Frame step</label><button id="step" class="btn">Step</button></div>
+          <div class="row"><label>Recorder format</label><div id="recFmt" class="time">—</div></div>
+          <div class="row"><label>Record Trim ▶</label><button id="recTrim" class="btn" disabled>Start</button></div>
+          <div class="row"><label>Record ⦿</label><button id="recToggle" class="btn" disabled>Record ⦿</button></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="canvas-wrap">
+      <canvas id="gl"></canvas>
+      <video id="video" crossorigin="anonymous" playsinline></video>
+    </main>
+  </div>
+
+<script>
+(() => {
+  const $=id=>document.getElementById(id);
+  // Elements
+  const glCanvas=$('gl'), video=$('video'), fileInput=$('file'), playBtn=$('playPause'), snapshotBtn=$('snapshot');
+  const rate=$('rate'), scale=$('scale'), presets=$('presets'), userPresets=$('userPresets'), presetName=$('presetName'), savePreset=$('savePreset'), deletePreset=$('deletePreset'), randomize=$('randomize'), resetFxBtn=$('resetFx');
+  const scrub=$('scrub'), tCur=$('tCur'), tDur=$('tDur'), trimStart=$('trimStart'), trimEnd=$('trimEnd'), loopTrim=$('loopTrim');
+  const timeFreeze=$('timeFreeze'), stepBtn=$('step');
+  const recFmt=$('recFmt'), recTrim=$('recTrim'), recToggle=$('recToggle');
+  const feedbackMode=$('feedbackMode');
+
+  const C = {
+    // Feedback & temporal
+    useFeedback: $('useFeedback'), feedbackMix:$('feedbackMix'), feedbackZoom:$('feedbackZoom'),
+    echoMix:$('echoMix'), echoDecay:$('echoDecay'), slitMix:$('slitMix'), slitDir:$('slitDir'), slitRate:$('slitRate'), stutter:$('stutter'),
+    fbPosition:$('fbPosition'), fbGain:$('fbGain'), fbGamma:$('fbGamma'), fbSat:$('fbSat'), fbHue:$('fbHue'), fbBlur:$('fbBlur'), fbLuma:$('fbLuma'), fbTone:$('fbTone'), fbClamp:$('fbClamp'),
+    // Core
+    rgbSplit:$('rgbSplit'), pixelate:$('pixelate'), posterize:$('posterize'), posterizeY:$('posterizeY'), bitDepth:$('bitDepth'), noiseAmt:$('noiseAmt'), blockJitter:$('blockJitter'), scanlines:$('scanlines'), hueRate:$('hueRate'),
+    // Warp/Camera
+    barrel:$('barrel'), swirl:$('swirl'), shearX:$('shearX'), shearY:$('shearY'), waveXAmp:$('waveXAmp'), waveXFreq:$('waveXFreq'), waveYAmp:$('waveYAmp'), waveYFreq:$('waveYFreq'), rollSkew:$('rollSkew'),
+    // Analog/CRT
+    tearAmt:$('tearAmt'), tearBands:$('tearBands'), specks:$('specks'), crtCurv:$('crtCurv'), vignette:$('vignette'), phosphor:$('phosphor'),
+    // Post
+    hue:$('hue'), sat:$('sat'), bright:$('bright'), contrast:$('contrast'), edgeMix:$('edgeMix'), sharpen:$('sharpen'), bloomThresh:$('bloomThresh'), bloomStr:$('bloomStr'), threshMix:$('threshMix'), dither:$('dither'),
+    // Misc
+    seed:$('seed')
+  };
+
+  // GL setup
+  const gl = glCanvas.getContext('webgl', {alpha:false, antialias:false, preserveDrawingBuffer:true});
+  if(!gl){ alert('WebGL not supported'); return; }
+
+  const VERT=`
+  attribute vec2 a_pos; varying vec2 v_uv; void main(){ v_uv=(a_pos+1.0)*0.5; gl_Position=vec4(a_pos,0.0,1.0);} 
+  `;
+
+  const FRAG=`
+  precision highp float; varying vec2 v_uv; 
+  uniform sampler2D u_frame; uniform sampler2D u_fb; 
+  uniform sampler2D u_echo0; uniform sampler2D u_echo1; uniform sampler2D u_echo2; uniform sampler2D u_echo3;
+  uniform vec2 u_res; uniform float u_time; uniform float u_playhead; 
+  // chain + feedback controls
+  uniform float u_fbPosition;           // 0 = start (pre), 1 = end (post)
+  uniform float u_feedbackMode;         // 0..7 (see modes)
+  uniform float u_feedbackMix;          // 0..0.98
+  uniform float u_feedbackZoom;         // ~1.0
+  uniform float u_useFeedback;          // 0/1
+  uniform float u_fbGain, u_fbGamma, u_fbSat, u_fbHue, u_fbBlur, u_fbLuma, u_fbTone, u_fbClamp;
+  
+  // temporal toys
+  uniform float u_echoMix, u_echoDecay, u_slitMix, u_slitDir, u_slitRate, u_stutter;
+  
+  // core + warp
+  uniform float u_rgbSplit,u_pixelate,u_posterize,u_posterizeY,u_bitDepth,u_noiseAmt,u_blockJitter,u_scanlines,u_hueRate;
+  uniform float u_barrel,u_swirl,u_shearX,u_shearY,u_waveXAmp,u_waveXFreq,u_waveYAmp,u_waveYFreq,u_rollSkew;
+  // analog/CRT
+  uniform float u_tearAmt,u_tearBands,u_specks,u_crtCurv,u_vignette,u_phosphor;
+  // post color
+  uniform float u_hue,u_sat,u_bright,u_contrast,u_edgeMix,u_sharpen,u_bloomThresh,u_bloomStr,u_threshMix,u_dither,u_seed;
+
+  // helpers
+  float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y);} 
+  float noise(vec2 p){ vec2 i=floor(p),f=fract(p); float a=hash(i),b=hash(i+vec2(1.,0.)),c=hash(i+vec2(0.,1.)),d=hash(i+vec2(1.,1.)); vec2 u=f*f*(3.-2.*f); return mix(a,b,u.x)+(c-a)*u.y*(1.-u.x)+(d-b)*u.x*u.y; }
+  vec3 sat3(vec3 c,float s){ float l=dot(c, vec3(0.2126,0.7152,0.0722)); return mix(vec3(l), c, s);} 
+  vec3 posterize(vec3 c,float steps){ return floor(c*steps)/steps;} 
+  vec3 bitcrush(vec3 c,float bits){ float lv=pow(2., floor(bits)); return floor(c*lv)/lv; }
+  mat3 hueRotate(float a){ float s=sin(a), c=cos(a); return mat3(
+    0.213+0.787*c-0.213*s, 0.715-0.715*c-0.715*s, 0.072-0.072*c+0.928*s,
+    0.213-0.213*c+0.143*s, 0.715+0.285*c+0.140*s, 0.072-0.072*c-0.283*s,
+    0.213-0.213*c-0.787*s, 0.715-0.715*c+0.715*s, 0.072+0.928*c+0.072*s ); }
+  vec2 barrel(vec2 uv,float k){ vec2 cc=uv-0.5; float r2=dot(cc,cc); return cc*(1.0+k*r2)+0.5; }
+  vec2 swirl(vec2 uv,float s){ vec2 c=vec2(0.5); vec2 p=uv-c; float r=length(p); float a=atan(p.y,p.x)+s*r*r; return vec2(cos(a),sin(a))*r + c; }
+
+  float bayer2index(vec2 p){ vec2 a = mod(p, 2.0); return a.x + a.y*2.0; }
+  float bayer8index(vec2 p){ float b0=bayer2index(p); float b1=bayer2index(floor(mod(p,4.0)/2.0)); float b2=bayer2index(floor(mod(p,8.0)/4.0)); return b0 + 4.0*b1 + 16.0*b2; }
+  float bayer8(vec2 uv){ return bayer8index(floor(uv)) / 64.0; }
+
+  vec3 sampleBlur(sampler2D tex, vec2 uv, vec2 res, float amt){ if(amt<=0.001) return texture2D(tex, uv).rgb; vec2 px = amt*1.5/res; vec3 c=texture2D(tex,uv).rgb*0.4; c += texture2D(tex, uv+vec2(px.x,0.0)).rgb*0.15; c += texture2D(tex, uv-vec2(px.x,0.0)).rgb*0.15; c += texture2D(tex, uv+vec2(0.0,px.y)).rgb*0.15; c += texture2D(tex, uv-vec2(0.0,px.y)).rgb*0.15; return c; }
+
+  vec3 preprocessFB(vec3 fb){
+    fb = sat3(fb * u_fbGain, u_fbSat);
+    fb = pow(max(fb, 0.0), vec3(max(0.001, u_fbGamma)));
+    fb *= hueRotate(u_fbHue);
+    if(u_fbClamp>0.0){ fb = clamp(fb, 0.0, 1.0 - u_fbClamp*0.2); }
+    return fb;
+  }
+
+  vec3 applyFB(vec3 cur, vec3 fb){
+    float m = u_feedbackMix;
+    vec3 outc = cur;
+    if(u_feedbackMode < 0.5){ // Melt
+      outc = mix(cur, fb, m);
+    } else if(u_feedbackMode < 1.5){ // Crisp Echo
+      float yfb = dot(fb, vec3(0.2126,0.7152,0.0722));
+      vec3 fbSoft = sat3(fb, 0.5);
+      vec3 tmp = mix(cur, fbSoft, m*0.5);
+      outc = mix(tmp, tmp*(0.7+0.6*yfb), m*0.5);
+    } else if(u_feedbackMode < 2.5){ // Additive
+      outc = cur + fb*m;
+    } else if(u_feedbackMode < 3.5){ // Screen
+      outc = 1.0 - (1.0-cur) * (1.0 - fb*m);
+    } else if(u_feedbackMode < 4.5){ // Difference
+      outc = abs(cur - fb*m);
+    } else if(u_feedbackMode < 5.5){ // Darken
+      outc = min(cur, fb*m);
+    } else if(u_feedbackMode < 6.5){ // Lighten
+      outc = max(cur, fb*m);
+    } else { // Optical Bloom (works best with FB blur > 0)
+      outc = cur + fb*m;
+    }
+    if(u_fbLuma > 0.001){
+      float yCur = dot(outc, vec3(0.2126,0.7152,0.0722));
+      float yFb = dot(fb, vec3(0.2126,0.7152,0.0722));
+      float yMix = mix(yCur, yFb, m);
+      outc += (yMix - yCur) * u_fbLuma;
+    }
+    if(u_fbTone > 0.001){ outc = mix(outc, outc/(1.0+outc), u_fbTone); }
+    return outc;
+  }
+
+  vec3 sobel(sampler2D tex, vec2 uv, vec2 res){ vec2 px=1.0/res; vec3 tl=texture2D(tex,uv+px*vec2(-1.,-1.)).rgb; vec3 t=texture2D(tex,uv+px*vec2(0.,-1.)).rgb; vec3 tr=texture2D(tex,uv+px*vec2(1.,-1.)).rgb; vec3 l=texture2D(tex,uv+px*vec2(-1.,0.)).rgb; vec3 r=texture2D(tex,uv+px*vec2(1.,0.)).rgb; vec3 bl=texture2D(tex,uv+px*vec2(-1.,1.)).rgb; vec3 b=texture2D(tex,uv+px*vec2(0.,1.)).rgb; vec3 br=texture2D(tex,uv+px*vec2(1.,1.)).rgb; vec3 gx=tl+2.0*l+bl - (tr+2.0*r+br); vec3 gy=tl+2.0*t+tr - (bl+2.0*b+br); return sqrt(gx*gx+gy*gy); }
+
+  void main(){
+    vec2 res=u_res; vec2 uv=v_uv; float T=u_time; 
+    // Stutter (time quantization)
+    float stp = max(0.0, 1.0 - u_stutter); float tSt = floor(T/stp)*stp;
+
+    // Rolling shutter skew
+    uv.x += u_rollSkew * (u_slitDir>0.5? uv.y : uv.x);
+
+    // Pre-warp
+    uv = barrel(uv, u_barrel + u_crtCurv*0.15);
+    uv = swirl(uv, u_swirl*0.15);
+    uv += mat2(1.0, u_shearY, u_shearX, 1.0) * (uv-0.5) + 0.5 - uv;
+
+    // Waves
+    uv.x += sin(uv.y*u_waveXFreq + tSt*1.7) * u_waveXAmp;
+    uv.y += sin(uv.x*u_waveYFreq + tSt*1.3) * u_waveYAmp;
+
+    // Pixelate
+    float pix=max(1.0,floor(u_pixelate)); uv=(floor(uv*res/pix)*pix)/res;
+
+    // RGB split + block jitter
+    vec2 rs=vec2(u_rgbSplit)/res + (hash(floor(uv*vec2(16.0,9.0))+u_seed)-0.5) * u_blockJitter/res;
+    vec3 frameCol; frameCol.r=texture2D(u_frame, uv+rs).r; frameCol.g=texture2D(u_frame, uv).g; frameCol.b=texture2D(u_frame, uv-rs).b;
+
+    // Feedback sample & preprocess
+    vec2 fuv=(uv-0.5)/u_feedbackZoom + 0.5; vec3 fbS = sampleBlur(u_fb, fuv, res, u_fbBlur); fbS = preprocessFB(fbS);
+
+    // Pre/post chain blending
+    vec3 col = frameCol;
+    if(u_useFeedback>0.5 && u_fbPosition < 0.5){ col = applyFB(frameCol, fbS); }
+
+    // Slit-scan from echo taps
+    if(u_slitMix>0.001){ float axis=(u_slitDir>0.5? uv.y:uv.x); float k=fract(axis+T*u_slitRate); vec2 suv=uv; if(u_slitDir>0.5) suv.x=k; else suv.y=k; vec3 s0=texture2D(u_echo0,suv).rgb; vec3 s1=texture2D(u_echo1,suv).rgb; vec3 s2=texture2D(u_echo2,suv).rgb; vec3 s3=texture2D(u_echo3,suv).rgb; vec3 slit=(s0+0.7*s1+0.5*s2+0.35*s3)/2.55; col=mix(col, slit, u_slitMix); }
+
+    // VHS tear bands (applied to sampling of frame; subtle mix)
+    if(u_tearBands>0.5 && u_tearAmt>0.0){ float bands=u_tearBands; float id=floor(uv.y * bands); float r=hash(vec2(id, u_seed + floor(T*2.0))); float off=(r-0.5)*(u_tearAmt/res.x); if(r>0.85){ vec3 tear=texture2D(u_frame, uv + vec2(off,0.0)).rgb; col = mix(col, tear, 0.5); } }
+
+    // Noise & scanlines
+    float n=noise(uv*vec2(res.x/2.0,res.y/2.0) + T*vec2(12.3,7.1) + u_seed); col += (n-0.5)*u_noiseAmt; float sline=sin(uv.y*res.y*3.14159); col *= 1.0 - u_scanlines*0.2 + u_scanlines*0.2*sline;
+
+    // Dust specks
+    if(u_specks>0.0){ float sp = step(1.0 - u_specks, hash(floor(uv*res*vec2(1.0,0.7))+u_seed+floor(T*60.0))); col = mix(col, vec3(1.0), sp*0.6); }
+
+    // Post color (pre-feedback if post mode selected)
+    float hueAll = u_hue + u_hueRate*T; col *= hueRotate(hueAll); col = sat3(col, u_sat); col = (col-0.5)*u_contrast + 0.5 + u_bright;
+
+    // Separate posterize (luma/chroma)
+    float Y = dot(col, vec3(0.2126,0.7152,0.0722)); float Yq = floor(Y*u_posterizeY)/u_posterizeY; vec3 Cc = posterize(col, u_posterize); col = mix(col, vec3(Yq) + (Cc - vec3(Y)), 0.5);
+
+    // Edge + sharpen
+    vec3 edge = sobel(u_frame, uv, res); col = mix(col, edge, u_edgeMix);
+    if(u_sharpen>0.001){ vec2 px=1.0/res; vec3 c0=texture2D(u_frame,uv).rgb; vec3 nb = (texture2D(u_frame,uv+px*vec2(1,0)).rgb+texture2D(u_frame,uv+px*vec2(-1,0)).rgb+texture2D(u_frame,uv+px*vec2(0,1)).rgb+texture2D(u_frame,uv+px*vec2(0,-1)).rgb)*0.25; col += u_sharpen*(c0 - nb); }
+
+    // Bloom (cheap)
+    if(u_bloomStr>0.001){ vec2 px=1.5/u_res; vec3 acc=vec3(0.0); float w=0.0; for(int i=-2;i<=2;i++) for(int j=-2;j<=2;j++){ vec3 s=texture2D(u_frame, uv+px*vec2(float(i),float(j))).rgb; float m = max(0.0, (length(max(s-vec3(u_bloomThresh),0.0)))); acc += s*m; w += m + 0.0001; } acc/=w; col = mix(col, acc, u_bloomStr); }
+
+    // Threshold
+    if(u_threshMix>0.001){ float yy=dot(col,vec3(0.2126,0.7152,0.0722)); float th=step(0.5, yy); col = mix(col, vec3(th), u_threshMix); }
+
+    // Dither (Bayer 8x8)
+    if(u_dither>0.001){ float y=dot(col,vec3(0.2126,0.7152,0.0722)); float q=step(bayer8(uv*res), y); col = mix(col, vec3(q), u_dither); }
+
+    // CRT phosphor + vignette
+    if(u_phosphor>0.001){ float tri = mod(floor(uv.x*res.x), 3.0); vec3 mask = tri<1.0? vec3(1.0,0.6,0.6) : (tri<2.0? vec3(0.6,1.0,0.6) : vec3(0.6,0.6,1.0)); col *= mix(vec3(1.0), mask, u_phosphor*0.5); }
+    if(u_vignette>0.0){ float r = length((v_uv-0.5)/vec2(1.0, u_res.y/u_res.x)); float v = smoothstep(0.9, 0.4, r); col *= mix(1.0, v, u_vignette); }
+
+    // POST feedback blending
+    if(u_useFeedback>0.5 && u_fbPosition > 0.5){ col = applyFB(col, fbS); }
+
+    gl_FragColor = vec4(col,1.0);
+  }
+  `;
+
+  function sh(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){ console.error(gl.getShaderInfoLog(s)); throw new Error('Shader compile failed'); } return s; }
+  function prog(vs,fs){ const p=gl.createProgram(); gl.attachShader(p,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)){ console.error(gl.getProgramInfoLog(p)); throw new Error('Program link failed'); } return p; }
+
+  const P=prog(VERT,FRAG); gl.useProgram(P);
+  const quad=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,quad); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1, 1,-1,1,1,-1,1]),gl.STATIC_DRAW);
+  const aPos=gl.getAttribLocation(P,'a_pos'); gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0);
+  const U=n=>gl.getUniformLocation(P,n);
+  const ULoc={ u_frame:U('u_frame'), u_fb:U('u_fb'), u_echo0:U('u_echo0'), u_echo1:U('u_echo1'), u_echo2:U('u_echo2'), u_echo3:U('u_echo3'), u_res:U('u_res'), u_time:U('u_time'), u_playhead:U('u_playhead'), u_feedbackMode:U('u_feedbackMode'),
+    u_rgbSplit:U('u_rgbSplit'), u_pixelate:U('u_pixelate'), u_posterize:U('u_posterize'), u_posterizeY:U('u_posterizeY'), u_bitDepth:U('u_bitDepth'), u_noiseAmt:U('u_noiseAmt'), u_blockJitter:U('u_blockJitter'), u_scanlines:U('u_scanlines'), u_hueRate:U('u_hueRate'),
+    u_feedbackMix:U('u_feedbackMix'), u_feedbackZoom:U('u_feedbackZoom'), u_useFeedback:U('u_useFeedback'), u_echoMix:U('u_echoMix'), u_echoDecay:U('u_echoDecay'), u_slitMix:U('u_slitMix'), u_slitDir:U('u_slitDir'), u_slitRate:U('u_slitRate'), u_stutter:U('u_stutter'),
+    u_barrel:U('u_barrel'), u_swirl:U('u_swirl'), u_shearX:U('u_shearX'), u_shearY:U('u_shearY'), u_waveXAmp:U('u_waveXAmp'), u_waveXFreq:U('u_waveXFreq'), u_waveYAmp:U('u_waveYAmp'), u_waveYFreq:U('u_waveYFreq'), u_rollSkew:U('u_rollSkew'),
+    u_tearAmt:U('u_tearAmt'), u_tearBands:U('u_tearBands'), u_specks:U('u_specks'), u_crtCurv:U('u_crtCurv'), u_vignette:U('u_vignette'), u_phosphor:U('u_phosphor'),
+    u_hue:U('u_hue'), u_sat:U('u_sat'), u_bright:U('u_bright'), u_contrast:U('u_contrast'), u_edgeMix:U('u_edgeMix'), u_sharpen:U('u_sharpen'), u_bloomThresh:U('u_bloomThresh'), u_bloomStr:U('u_bloomStr'), u_threshMix:U('u_threshMix'), u_dither:U('u_dither'), u_seed:U('u_seed'),
+    u_fbPosition:U('u_fbPosition'), u_fbGain:U('u_fbGain'), u_fbGamma:U('u_fbGamma'), u_fbSat:U('u_fbSat'), u_fbHue:U('u_fbHue'), u_fbBlur:U('u_fbBlur'), u_fbLuma:U('u_fbLuma'), u_fbTone:U('u_fbTone'), u_fbClamp:U('u_fbClamp') };
+
+  function makeTex(){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); return t; }
+  function makeFBO(){ const tex=makeTex(); const fbo=gl.createFramebuffer(); return {tex,fbo,w:0,h:0}; }
+
+  const videoTex=makeTex(); const fbA=makeFBO(), fbB=makeFBO(); let srcFBO=fbA, dstFBO=fbB;
+  const echoBuf=[makeFBO(), makeFBO(), makeFBO(), makeFBO()]; let echoIdx=0;
+  const vCanvas=document.createElement('canvas'); const vCtx=vCanvas.getContext('2d');
+
+  function resizeFBO(buf,w,h){ if(buf.w===w&&buf.h===h) return; gl.bindTexture(gl.TEXTURE_2D, buf.tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null); gl.bindFramebuffer(gl.FRAMEBUFFER, buf.fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, buf.tex, 0); buf.w=w; buf.h=h; }
+
+  let vw=1280,vh=720; function resizeCanvas(){ const scaleFactor=+scale.value; const W=Math.max(256,Math.floor(vw*scaleFactor)); const H=Math.max(144,Math.floor(vh*scaleFactor)); if(glCanvas.width!==W||glCanvas.height!==H){ glCanvas.width=W; glCanvas.height=H; gl.viewport(0,0,W,H); resizeFBO(fbA,W,H); resizeFBO(fbB,W,H); echoBuf.forEach(b=>resizeFBO(b,W,H)); } }
+  window.addEventListener('resize', resizeCanvas); scale.addEventListener('input', resizeCanvas);
+
+  let playing=false; let userTime=0; let lastT=performance.now(); video.muted=true; video.preload='auto';
+  // Show first decodable frame and try to begin playback on capable browsers
+  video.addEventListener('loadeddata', ()=>{ try { updateVideoTexture(); } catch(_){} });
+  video.addEventListener('canplay', async ()=>{ if(!playing){ try { video.muted=true; await video.play(); playing=true; playBtn.textContent='Pause'; } catch(_){} } });
+  video.addEventListener('error', ()=>{ alert('This file could not be decoded by the browser. Prefer H.264 MP4 or VP9 WebM with AAC/Opus.'); });
+  glCanvas.addEventListener('click', async ()=>{ if(!playing && video.src){ try{ video.muted=true; await video.play(); playing=true; playBtn.textContent='Pause'; } catch(_){} } });
+
+  function updateVideoTexture(){ if(video.readyState>=2){ const tw=glCanvas.width, th=glCanvas.height; if(vCanvas.width!==tw||vCanvas.height!==th){ vCanvas.width=tw; vCanvas.height=th; }
+    const vw_=video.videoWidth||1, vh_=video.videoHeight||1; const s=Math.max(tw/vw_, th/vh_); const dw=Math.floor(vw_*s), dh=Math.floor(vh_*s); const dx=Math.floor((tw-dw)/2), dy=Math.floor((th-dh)/2); vCtx.drawImage(video, dx, dy, dw, dh);
+    gl.bindTexture(gl.TEXTURE_2D, videoTex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,vCanvas); } }
+
+  function bindTexture(unit,tex,loc){ gl.activeTexture(gl.TEXTURE0+unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, unit); }
+  function renderToFBO(buf){ gl.bindFramebuffer(gl.FRAMEBUFFER, buf.fbo); gl.drawArrays(gl.TRIANGLES,0,6); }
+  function copyTexToFBO(srcTex, buf){ gl.bindFramebuffer(gl.FRAMEBUFFER, buf.fbo); bindTexture(0, srcTex, ULoc.u_frame); // simple blit using program expecting u_frame
+    // Minimal blit shader reuse: draw with current program, sampling u_frame and zero feedback
+    bindTexture(1, srcTex, ULoc.u_fb); gl.drawArrays(gl.TRIANGLES,0,6); }
+  function swap(){ const t=srcFBO; srcFBO=dstFBO; dstFBO=t; }
+
+  function setU(){
+    gl.uniform2f(ULoc.u_res, glCanvas.width, glCanvas.height);
+    gl.uniform1f(ULoc.u_time, userTime*(timeFreeze.checked?0.0:1.0));
+    const ph = video.duration? (video.currentTime/video.duration): 0.0; gl.uniform1f(ULoc.u_playhead, ph);
+    gl.uniform1f(ULoc.u_feedbackMode, +feedbackMode.value);
+
+    // feedback/temporal
+    gl.uniform1f(ULoc.u_useFeedback, C.useFeedback.checked?1.0:0.0);
+    gl.uniform1f(ULoc.u_fbPosition, +C.fbPosition.value);
+    gl.uniform1f(ULoc.u_feedbackMix, +C.feedbackMix.value);
+    gl.uniform1f(ULoc.u_feedbackZoom, +C.feedbackZoom.value);
+    gl.uniform1f(ULoc.u_fbGain, +C.fbGain.value);
+    gl.uniform1f(ULoc.u_fbGamma, +C.fbGamma.value);
+    gl.uniform1f(ULoc.u_fbSat, +C.fbSat.value);
+    gl.uniform1f(ULoc.u_fbHue, +C.fbHue.value);
+    gl.uniform1f(ULoc.u_fbBlur, +C.fbBlur.value);
+    gl.uniform1f(ULoc.u_fbLuma, +C.fbLuma.value);
+    gl.uniform1f(ULoc.u_fbTone, +C.fbTone.value);
+    gl.uniform1f(ULoc.u_fbClamp, +C.fbClamp.value);
+
+    gl.uniform1f(ULoc.u_echoMix, +C.echoMix.value); gl.uniform1f(ULoc.u_echoDecay, +C.echoDecay.value);
+    gl.uniform1f(ULoc.u_slitMix, +C.slitMix.value); gl.uniform1f(ULoc.u_slitDir, +C.slitDir.value); gl.uniform1f(ULoc.u_slitRate, +C.slitRate.value); gl.uniform1f(ULoc.u_stutter, +C.stutter.value);
+
+    // core
+    gl.uniform1f(ULoc.u_rgbSplit, +C.rgbSplit.value); gl.uniform1f(ULoc.u_pixelate, +C.pixelate.value); gl.uniform1f(ULoc.u_posterize, +C.posterize.value); gl.uniform1f(ULoc.u_posterizeY, +C.posterizeY.value); gl.uniform1f(ULoc.u_bitDepth, +C.bitDepth.value); gl.uniform1f(ULoc.u_noiseAmt, +C.noiseAmt.value); gl.uniform1f(ULoc.u_blockJitter, +C.blockJitter.value); gl.uniform1f(ULoc.u_scanlines, +C.scanlines.value); gl.uniform1f(ULoc.u_hueRate, +C.hueRate.value);
+
+    // warp
+    gl.uniform1f(ULoc.u_barrel, +C.barrel.value); gl.uniform1f(ULoc.u_swirl, +C.swirl.value); gl.uniform1f(ULoc.u_shearX, +C.shearX.value); gl.uniform1f(ULoc.u_shearY, +C.shearY.value); gl.uniform1f(ULoc.u_waveXAmp, +C.waveXAmp.value); gl.uniform1f(ULoc.u_waveXFreq, +C.waveXFreq.value); gl.uniform1f(ULoc.u_waveYAmp, +C.waveYAmp.value); gl.uniform1f(ULoc.u_waveYFreq, +C.waveYFreq.value); gl.uniform1f(ULoc.u_rollSkew, +C.rollSkew.value);
+
+    // analog/CRT
+    gl.uniform1f(ULoc.u_tearAmt, +C.tearAmt.value); gl.uniform1f(ULoc.u_tearBands, +C.tearBands.value); gl.uniform1f(ULoc.u_specks, +C.specks.value); gl.uniform1f(ULoc.u_crtCurv, +C.crtCurv.value); gl.uniform1f(ULoc.u_vignette, +C.vignette.value); gl.uniform1f(ULoc.u_phosphor, +C.phosphor.value);
+
+    // post
+    gl.uniform1f(ULoc.u_hue, +C.hue.value); gl.uniform1f(ULoc.u_sat, +C.sat.value); gl.uniform1f(ULoc.u_bright, +C.bright.value); gl.uniform1f(ULoc.u_contrast, +C.contrast.value); gl.uniform1f(ULoc.u_edgeMix, +C.edgeMix.value); gl.uniform1f(ULoc.u_sharpen, +C.sharpen.value); gl.uniform1f(ULoc.u_bloomThresh, +C.bloomThresh.value); gl.uniform1f(ULoc.u_bloomStr, +C.bloomStr.value); gl.uniform1f(ULoc.u_threshMix, +C.threshMix.value); gl.uniform1f(ULoc.u_dither, +C.dither.value);
+
+    gl.uniform1f(ULoc.u_seed, +C.seed.value);
+  }
+
+  function draw(){ const now=performance.now(); const dt=Math.min(0.1,(now-lastT)/1000); lastT=now; userTime+=dt; updateVideoTexture(); setU();
+    // pass 1: process into dstFBO (feedback uses srcFBO)
+    bindTexture(0, videoTex, ULoc.u_frame); bindTexture(1, srcFBO.tex, ULoc.u_fb);
+    // bind echo textures as 2..5
+    bindTexture(2, echoBuf[(echoIdx+3)&3].tex, ULoc.u_echo0);
+    bindTexture(3, echoBuf[(echoIdx+2)&3].tex, ULoc.u_echo1);
+    bindTexture(4, echoBuf[(echoIdx+1)&3].tex, ULoc.u_echo2);
+    bindTexture(5, echoBuf[(echoIdx+0)&3].tex, ULoc.u_echo3);
+    renderToFBO(dstFBO);
+    // screen blit
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    bindTexture(0, videoTex, ULoc.u_frame); bindTexture(1, dstFBO.tex, ULoc.u_fb);
+    bindTexture(2, echoBuf[(echoIdx+3)&3].tex, ULoc.u_echo0);
+    bindTexture(3, echoBuf[(echoIdx+2)&3].tex, ULoc.u_echo1);
+    bindTexture(4, echoBuf[(echoIdx+1)&3].tex, ULoc.u_echo2);
+    bindTexture(5, echoBuf[(echoIdx+0)&3].tex, ULoc.u_echo3);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    // copy current output to echo ring
+    copyTexToFBO(dstFBO.tex, echoBuf[echoIdx]); echoIdx=(echoIdx+1)&3;
+    // swap for feedback
+    const tmp=srcFBO; srcFBO=dstFBO; dstFBO=tmp;
+    requestAnimationFrame(draw);
+  }
+
+  // Load / transport
+  function fmtT(s){ if(!isFinite(s)) return '0:00'; const m=Math.floor(s/60); const ss=Math.floor(s%60).toString().padStart(2,'0'); return `${m}:${ss}`; }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+  function loadFile(f){ if(!f) return; if(window.__blobURL){ try{URL.revokeObjectURL(window.__blobURL);}catch(_){} }
+    const url=URL.createObjectURL(f); window.__blobURL=url; video.src=url; video.load(); video.playbackRate=+rate.value;
+    video.addEventListener('loadedmetadata', ()=>{ vw=video.videoWidth||1280; vh=video.videoHeight||720; resizeCanvas(); scrub.max=video.duration.toFixed(2); scrub.value=0; tDur.textContent=fmtT(video.duration); trimStart.value=0; trimEnd.value=video.duration.toFixed(2); playBtn.disabled=false; snapshotBtn.disabled=false; recTrim.disabled=false; recToggle.disabled=false; }, {once:true}); }
+
+  fileInput.addEventListener('change', e=>{ const f=e.target.files&&e.target.files[0]; if(f) loadFile(f); });
+  glCanvas.addEventListener('dragover', e=>e.preventDefault()); glCanvas.addEventListener('drop', e=>{ e.preventDefault(); const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) loadFile(f); });
+
+  playBtn.addEventListener('click', async ()=>{ if(playing){ video.pause(); playing=false; playBtn.textContent='Play'; return; } try{ video.muted=true; await video.play(); playing=true; playBtn.textContent='Pause'; }catch(_){ alert('Press Space or click canvas to allow playback. Prefer H.264 MP4 or VP9 WebM.'); }});
+  rate.addEventListener('input', ()=>{ video.playbackRate=+rate.value; });
+  snapshotBtn.addEventListener('click', ()=>{ const a=document.createElement('a'); a.href=glCanvas.toDataURL('image/png'); a.download='glitch_frame.png'; a.click(); });
+  scrub.addEventListener('input', ()=>{ if(!video.duration) return; video.currentTime=+scrub.value; updateVideoTexture(); });
+  video.addEventListener('timeupdate', ()=>{ scrub.value=video.currentTime.toFixed(2); tCur.textContent=fmtT(video.currentTime); if(loopTrim.checked){ const ts=+trimStart.value, te=+trimEnd.value; if(video.currentTime>=te-0.001){ video.currentTime=ts; } } });
+  stepBtn.addEventListener('click', ()=>{ if(!video.duration) return; video.pause(); playing=false; playBtn.textContent='Play'; video.currentTime=Math.min(video.duration, video.currentTime+1/30); updateVideoTexture(); });
+  document.addEventListener('keydown', (e)=>{ if(e.code==='Space'){ e.preventDefault(); playBtn.click(); } if(e.key.toLowerCase()==='r') randomize.click(); });
+
+  // Presets
+  const PRESETS={
+    'Studio Clean': { useFeedback:true, feedbackMode:1, feedbackMix:0.35, feedbackZoom:1.001, echoMix:0.2, echoDecay:0.7, slitMix:0, slitDir:1, slitRate:1, stutter:0, rgbSplit:0.8, pixelate:2, posterize:16, posterizeY:24, bitDepth:8, noiseAmt:0.02, blockJitter:0, scanlines:0.1, hueRate:0, barrel:0, swirl:0, shearX:0, shearY:0, waveXAmp:0, waveXFreq:20, waveYAmp:0.004, waveYFreq:24, rollSkew:0, tearAmt:0, tearBands:0, specks:0, crtCurv:0.05, vignette:0.15, phosphor:0.0, hue:0, sat:1.1, bright:0, contrast:1.05, edgeMix:0, sharpen:0.12, bloomThresh:1.2, bloomStr:0.12, threshMix:0, dither:0 },
+    'Data Moshish': { useFeedback:false, feedbackMode:1, feedbackMix:0, feedbackZoom:1.0, echoMix:0.65, echoDecay:0.4, slitMix:0.3, slitDir:0, slitRate:1.4, stutter:0.25, rgbSplit:6, pixelate:12, posterize:6, posterizeY:8, bitDepth:5, noiseAmt:0.04, blockJitter:18, scanlines:0.1, hueRate:0.2, barrel:0.03, swirl:0.6, shearX:0.05, shearY:0, waveXAmp:0.01, waveXFreq:50, waveYAmp:0.0, waveYFreq:24, rollSkew:0.001, tearAmt:8, tearBands:6, specks:0.1, crtCurv:0.0, vignette:0.05, phosphor:0.0, hue:0.1, sat:1.0, bright:0, contrast:1.3, edgeMix:0.25, sharpen:0.2, bloomThresh:1.0, bloomStr:0.3, threshMix:0, dither:0.1 },
+    'Psychedelic Melt': { useFeedback:true, feedbackMode:0, feedbackMix:0.78, feedbackZoom:1.003, echoMix:0.25, echoDecay:0.8, slitMix:0.0, slitDir:1, slitRate:0.8, stutter:0, rgbSplit:2.5, pixelate:3, posterize:10, posterizeY:20, bitDepth:7, noiseAmt:0.08, blockJitter:6, scanlines:0.15, hueRate:0.6, barrel:-0.05, swirl:2.8, shearX:0, shearY:0, waveXAmp:0.005, waveXFreq:14, waveYAmp:0.012, waveYFreq:22, rollSkew:0, tearAmt:0, tearBands:0, specks:0.05, crtCurv:0.1, vignette:0.2, phosphor:0.2, hue:1.2, sat:1.8, bright:0.03, contrast:1.08, edgeMix:0.0, sharpen:0.0, bloomThresh:0.9, bloomStr:0.9, threshMix:0.0, dither:0.0 },
+    'CRT Studio': { useFeedback:true, feedbackMode:1, feedbackMix:0.3, feedbackZoom:1.001, echoMix:0.15, echoDecay:0.8, slitMix:0.0, slitDir:1, slitRate:1.0, stutter:0, rgbSplit:0.8, pixelate:2, posterize:18, posterizeY:28, bitDepth:8, noiseAmt:0.03, blockJitter:0, scanlines:0.35, hueRate:0, barrel:-0.02, swirl:0, shearX:0, shearY:0, waveXAmp:0, waveXFreq:20, waveYAmp:0.004, waveYFreq:24, rollSkew:0, tearAmt:0, tearBands:0, specks:0.02, crtCurv:0.18, vignette:0.25, phosphor:0.4, hue:0, sat:1.1, bright:0, contrast:1.05, edgeMix:0.0, sharpen:0.1, bloomThresh:1.2, bloomStr:0.15, threshMix:0, dither:0.2 },
+    'Blade Static': { useFeedback:false, feedbackMode:1, feedbackMix:0, feedbackZoom:1.0, echoMix:0.1, echoDecay:0.6, slitMix:0.0, slitDir:1, slitRate:1.0, stutter:0.0, rgbSplit:0.7, pixelate:2, posterize:22, posterizeY:40, bitDepth:8, noiseAmt:0.22, blockJitter:2, scanlines:0.5, hueRate:0.0, barrel:0.0, swirl:0.0, shearX:0, shearY:0, waveXAmp:0, waveXFreq:20, waveYAmp:0.02, waveYFreq:6, rollSkew:0, tearAmt:0, tearBands:0, specks:0.3, crtCurv:0.0, vignette:0.35, phosphor:0.0, hue:0.0, sat:0.6, bright:-0.05, contrast:1.2, edgeMix:0.35, sharpen:0.35, bloomThresh:1.4, bloomStr:0.35, threshMix:0.25, dither:0.35 }
+  };
+  (function fill(){ for(const k of Object.keys(PRESETS)){ const o=document.createElement('option'); o.value=k; o.textContent=k; presets.appendChild(o);} presets.value='Studio Clean'; })();
+  function applyPreset(name){ const p=PRESETS[name]; if(!p) return; for(const k in p){ if(k in C){ if(C[k].type==='checkbox') C[k].checked=!!p[k]; else C[k].value=p[k]; } } feedbackMode.value=p.feedbackMode??1; }
+  presets.addEventListener('change', e=>applyPreset(e.target.value));
+  // User preset handling
+  const USER_KEY = 'glitchlab_v3_user_presets';
+  function loadUserPresets(){ try{ return JSON.parse(localStorage.getItem(USER_KEY)||'[]'); }catch(_){ return []; } }
+  function saveUserPresets(arr){ localStorage.setItem(USER_KEY, JSON.stringify(arr)); }
+  function refreshUserPresetUI(){ const arr=loadUserPresets(); userPresets.innerHTML=''; arr.forEach(p=>{ const o=document.createElement('option'); o.value=p.name; o.textContent=p.name; userPresets.appendChild(o); }); }
+  function stateFromControls(){ const s={}; for(const k in C){ const el=C[k]; if(!el) continue; if(el.type==='checkbox') s[k]=!!el.checked; else s[k]=isNaN(+el.value)? el.value : +el.value; } s.feedbackMode=+feedbackMode.value; s.fbPosition=+C.fbPosition.value; return s; }
+  function applyState(s){ for(const k in s){ if(k in C){ const el=C[k]; if(el.type==='checkbox') el.checked=!!s[k]; else el.value=s[k]; } }
+    if('feedbackMode' in s) feedbackMode.value = s.feedbackMode;
+    if('fbPosition' in s) C.fbPosition.value = s.fbPosition;
+  }
+  savePreset.addEventListener('click', ()=>{
+    const name=(presetName.value||'').trim(); if(!name){ alert('Enter a preset name'); return; }
+    const arr=loadUserPresets(); const existing=arr.find(p=>p.name.toLowerCase()===name.toLowerCase());
+    const data=stateFromControls(); const now=Date.now();
+    if(existing){ existing.data=data; existing.savedAt=now; }
+    else{
+      while(arr.length>=15){ // drop oldest
+        arr.sort((a,b)=>a.savedAt-b.savedAt); arr.shift();
+      }
+      arr.push({name, data, savedAt: now});
+    }
+    saveUserPresets(arr); refreshUserPresetUI(); userPresets.value=name;
+  });
+  deletePreset.addEventListener('click', ()=>{
+    const sel=userPresets.value; if(!sel){ alert('Select a user preset to delete'); return; }
+    const arr=loadUserPresets().filter(p=>p.name!==sel); saveUserPresets(arr); refreshUserPresetUI();
+  });
+  userPresets.addEventListener('change', ()=>{ const sel=userPresets.value; const p=loadUserPresets().find(x=>x.name===sel); if(p){ applyState(p.data); } });
+  // initial fill
+  refreshUserPresetUI();
+  randomize.addEventListener('click', ()=>{ for(const k in C){ const el=C[k]; if(el.type==='range'){ const min=+el.min||0, max=+el.max||1, step=+el.step||0.01; const v=(Math.random()*(max-min)+min); el.value=(Math.round(v/step)*step).toFixed(String(step).split('.')[1]?.length||0);} if(el.type==='checkbox'){ el.checked=Math.random()>0.5; } }
+    feedbackMode.value = Math.random()>0.5?1:0; });
+
+  // Recorder (same approach as v2)
+  let recorder=null, recChunks=[], recAutoStop=false, recStopAt=Infinity, combinedStream=null;
+  function pickMime(){ const mp4='video/mp4;codecs=avc1,mp4a.40.2'; const webm9='video/webm;codecs=vp9,opus'; const webm8='video/webm;codecs=vp8,opus'; if(window.MediaRecorder && MediaRecorder.isTypeSupported(mp4)) return {type:mp4,ext:'mp4'}; if(window.MediaRecorder && MediaRecorder.isTypeSupported(webm9)) return {type:webm9,ext:'webm'}; if(window.MediaRecorder && MediaRecorder.isTypeSupported(webm8)) return {type:webm8,ext:'webm'}; return null; }
+  function updateRecFmt(){ const pick=pickMime(); recFmt.textContent = pick ? (pick.ext.toUpperCase()+' ready') : 'Recorder unsupported'; }
+  function buildStream(){ const fps=60; const canvasStream=glCanvas.captureStream(fps); const vStream = video.captureStream? video.captureStream(): null; combinedStream=new MediaStream(); const vtrack=canvasStream.getVideoTracks()[0]; if(vtrack) combinedStream.addTrack(vtrack); if(vStream){ const atr=vStream.getAudioTracks()[0]; if(atr) combinedStream.addTrack(atr); } return combinedStream; }
+  function startRec(){ if(recorder) return; const pick=pickMime(); if(!pick){ alert('MediaRecorder not supported in this browser.'); return; } const stream=buildStream(); recorder=new MediaRecorder(stream, { mimeType: pick.type, videoBitsPerSecond: 10_000_000 }); recChunks=[]; recorder.ondataavailable=(e)=>{ if(e.data && e.data.size>0) recChunks.push(e.data); }; recorder.onstop=()=>{ const pick2=pickMime(); const blob=new Blob(recChunks, {type: pick2?pick2.type:'video/webm'}); const a=document.createElement('a'); const ext=pick2?pick2.ext:'webm'; a.href=URL.createObjectURL(blob); a.download=`glitch_export.${ext}`; a.click(); recorder=null; recChunks=[]; if(combinedStream){ combinedStream.getTracks().forEach(t=>t.stop()); combinedStream=null; } }; recorder.start(); }
+  function stopRec(){ if(recorder){ recorder.stop(); }}
+  recToggle.addEventListener('click', ()=>{ if(recorder){ stopRec(); recToggle.textContent='Record ⦿'; } else { startRec(); recToggle.textContent='Stop ■'; }});
+  recTrim.addEventListener('click', async ()=>{ if(!video.duration) return; const ts=clamp(+trimStart.value,0,video.duration); const te=clamp(+trimEnd.value,ts,video.duration); recAutoStop=true; recStopAt=te; if(!playing){ try{ await video.play(); playing=true; playBtn.textContent='Pause'; }catch(_){} } video.currentTime=ts; startRec(); recToggle.textContent='Stop ■'; });
+  video.addEventListener('timeupdate', ()=>{ if(recAutoStop && video.currentTime>=recStopAt-0.002){ recAutoStop=false; recStopAt=Infinity; stopRec(); recToggle.textContent='Record ⦿'; if(loopTrim.checked){ video.currentTime=+trimStart.value; } else { video.pause(); playing=false; playBtn.textContent='Play'; } } });
+  updateRecFmt();
+
+  // Init
+  (function init(){ applyPreset('Studio Clean'); resizeCanvas(); requestAnimationFrame(draw); })();
+})();
+</script>
 </body>
 </html>
